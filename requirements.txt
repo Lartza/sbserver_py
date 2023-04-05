@@ -1,3 +1,5 @@
-fastapi==0.74.1
-sqlalchemy==1.4.31
-databases[postgresql]==0.5.5
+fastapi==0.95.0
+sqlalchemy==2.0.8
+databases[postgresql]==0.7.0
+fastapi-pagination==0.11.4
+fastapi-filter==0.5.4

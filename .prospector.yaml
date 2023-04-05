@@ -1,5 +1,6 @@
 output-format: pylint
 strictness: veryhigh
+autodetect: false
 
 ignore-paths:
   - .mypy_cache
@@ -19,15 +20,14 @@ pylint:
   enable:
     - useless-suppression
   disable:
-    - invalid-name
     - unused-argument
   options:
     max-line-length: 120
-    good-names: s
+  load-plugins:
+    - pylint_pydantic
 
-pep8:
+pycodestyle:
   options:
     max-line-length: 120
   disable:
-    - N803
-    - N815
+    - N805
