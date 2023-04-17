@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import Page, add_pagination
-from fastapi_pagination.ext.async_sqlalchemy import paginate
+from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_filter import FilterDepends
 from fastapi_filter.contrib.sqlalchemy import Filter
 
@@ -66,10 +66,9 @@ async def read_vipuser(userID: str, db: AsyncSession = Depends(get_db)) -> Optio
 @app.get('/sponsortimes', response_model=Page[schemas.Sponsortimes])
 async def read_sponsortimes(sponsortime_filter: SponsortimeFilter = FilterDepends(SponsortimeFilter),
                             db: AsyncSession = Depends(get_db)) -> Any:
-    stmt = sponsortime_filter.filter(select(models.Sponsortimes.__table__.columns, models.Usernames.userName)
-                                     .limit(10)
-                                     .outerjoin(models.Usernames,
-                                                models.Sponsortimes.userID == models.Usernames.userID))
+    stmt = sponsortime_filter.sort(select(models.Sponsortimes.__table__.columns, models.Usernames.userName)
+                                   .outerjoin(models.Usernames,
+                                              models.Sponsortimes.userID == models.Usernames.userID))
     return await paginate(db, stmt)
 
 
