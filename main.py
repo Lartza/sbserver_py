@@ -41,6 +41,22 @@ app.add_middleware(
 
 class SponsortimeFilter(Filter):
     videoID: Optional[str]
+    videoID__in: Optional[list[str]]
+    startTime__lt: Optional[float]
+    length__gte: Optional[float]
+    length__lte: Optional[float]
+    votes: Optional[int]
+    votes__gte: Optional[int]
+    votes__lte: Optional[int]
+    views: Optional[int]
+    views__gte: Optional[int]
+    views__lte: Optional[int]
+    category: Optional[str]
+    category__in: Optional[list[str]]
+    actionType: Optional[str]
+    actionType__in: Optional[list[str]]
+    userName: Optional[str]
+    userID: Optional[str]
     order_by: Optional[list[str]]
 
     class Constants(Filter.Constants):
@@ -66,9 +82,10 @@ async def read_vipuser(userID: str, db: AsyncSession = Depends(get_db)) -> Optio
 @app.get('/sponsortimes', response_model=Page[schemas.Sponsortimes])
 async def read_sponsortimes(sponsortime_filter: SponsortimeFilter = FilterDepends(SponsortimeFilter),
                             db: AsyncSession = Depends(get_db)) -> Any:
-    stmt = sponsortime_filter.sort(select(models.Sponsortimes.__table__.columns, models.Usernames.userName)
-                                   .outerjoin(models.Usernames,
-                                              models.Sponsortimes.userID == models.Usernames.userID))
+    query = select(models.Sponsortimes.__table__.columns, models.Sponsortimes.length, models.Usernames.userName)\
+                   .outerjoin(models.Usernames, models.Sponsortimes.userID == models.Usernames.userID)
+    query = sponsortime_filter.filter(query)
+    stmt = sponsortime_filter.sort(query)
     return await paginate(db, stmt)
 
 
@@ -88,13 +105,13 @@ async def read_usernames(db: AsyncSession = Depends(get_db)) -> Any:
     return await paginate(db, stmt)
 
 
-@app.get('/usernames/{userName}', response_model=Page[schemas.Usernames])
-async def read_username(userName: str, db: AsyncSession = Depends(get_db)) -> Any:
-    stmt = select(models.Usernames).where(models.Usernames.userName == userName)
+@app.get('/usernames/{userID}', response_model=Page[schemas.Usernames])
+async def read_username(userID: str, db: AsyncSession = Depends(get_db)) -> Any:
+    stmt = select(models.Usernames).where(models.Usernames.userID == userID)
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
     if user:
         return user
-    raise HTTPException(status_code=404, detail="Segment not found")
+    raise HTTPException(status_code=404, detail="User not found")
 
 add_pagination(app)

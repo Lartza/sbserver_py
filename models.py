@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Text, REAL, Integer, BigInteger
+from sqlalchemy.orm import column_property
 
 from database import Base
 
@@ -15,6 +16,7 @@ class Sponsortimes(Base):
     videoID = Column(Text, nullable=False)
     startTime = Column(REAL, nullable=False)
     endTime = Column(REAL, nullable=False)
+    length = column_property(endTime - startTime)
     votes = Column(Integer, nullable=False)
     locked = Column(Integer, nullable=False, default=0)
     incorrectVotes = Column(Integer, nullable=False, default=1)

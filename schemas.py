@@ -14,6 +14,7 @@ class SponsortimesBase(BaseModel):
     videoID: str
     startTime: float
     endTime: float
+    length: float
     votes: int
     locked: int
     incorrectVotes: int
