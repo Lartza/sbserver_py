@@ -5,7 +5,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import Page, add_pagination
 from fastapi_pagination.ext.sqlalchemy import paginate
-from fastapi_filter import FilterDepends
+from fastapi_filter import FilterDepends, with_prefix
 from fastapi_filter.contrib.sqlalchemy import Filter
 
 import schemas
@@ -29,7 +29,6 @@ app = FastAPI(title='sbserver_py',
                   'url': 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
               })
 
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins='*',
@@ -37,6 +36,13 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+
+class UserFilter(Filter):
+    userName: Optional[str]
+
+    class Constants(Filter.Constants):
+        model = models.Usernames
 
 
 class SponsortimeFilter(Filter):
@@ -55,9 +61,9 @@ class SponsortimeFilter(Filter):
     category__in: Optional[list[str]]
     actionType: Optional[str]
     actionType__in: Optional[list[str]]
-    userName: Optional[str]
     userID: Optional[str]
     order_by: Optional[list[str]]
+    user: Optional[UserFilter] = FilterDepends(with_prefix('user', UserFilter))
 
     class Constants(Filter.Constants):
         model = models.Sponsortimes
@@ -83,7 +89,7 @@ async def read_vipuser(userID: str, db: AsyncSession = Depends(get_db)) -> Optio
 async def read_sponsortimes(sponsortime_filter: SponsortimeFilter = FilterDepends(SponsortimeFilter),
                             db: AsyncSession = Depends(get_db)) -> Any:
     query = select(models.Sponsortimes.__table__.columns, models.Sponsortimes.length, models.Usernames.userName)\
-                   .outerjoin(models.Usernames, models.Sponsortimes.userID == models.Usernames.userID)
+            .outerjoin(models.Usernames, models.Sponsortimes.userID == models.Usernames.userID)
     query = sponsortime_filter.filter(query)
     stmt = sponsortime_filter.sort(query)
     return await paginate(db, stmt)
@@ -113,5 +119,16 @@ async def read_username(userID: str, db: AsyncSession = Depends(get_db)) -> Any:
     if user:
         return user
     raise HTTPException(status_code=404, detail="User not found")
+
+
+@app.get('/updated', response_model=schemas.Config)
+async def read_updated(db: AsyncSession = Depends(get_db)) -> Any:
+    stmt = select(models.Config).where(models.Config.key == 'updated')
+    result = await db.execute(stmt)
+    updated = result.scalar_one_or_none()
+    if updated:
+        return updated
+    raise HTTPException(status_code=404, detail="Update time not found")
+
 
 add_pagination(app)
