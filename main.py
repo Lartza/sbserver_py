@@ -89,7 +89,7 @@ async def read_vipuser(userID: str, db: AsyncSession = Depends(get_db)) -> Optio
 async def read_sponsortimes(sponsortime_filter: SponsortimeFilter = FilterDepends(SponsortimeFilter),
                             db: AsyncSession = Depends(get_db)) -> Any:
     query = select(models.Sponsortimes.__table__.columns, models.Sponsortimes.length, models.Usernames.userName)\
-            .outerjoin(models.Usernames, models.Sponsortimes.userID == models.Usernames.userID)
+        .outerjoin(models.Usernames, models.Sponsortimes.userID == models.Usernames.userID)
     query = sponsortime_filter.filter(query)
     stmt = sponsortime_filter.sort(query)
     return await paginate(db, stmt)
@@ -97,7 +97,9 @@ async def read_sponsortimes(sponsortime_filter: SponsortimeFilter = FilterDepend
 
 @app.get('/sponsortimes/{UUID}', response_model=schemas.Sponsortimes)
 async def read_sponsortime(UUID: str, db: AsyncSession = Depends(get_db)) -> Optional[Row]:
-    stmt = select(models.Sponsortimes).where(models.Sponsortimes.UUID == UUID)
+    stmt = select(models.Sponsortimes.__table__.columns, models.Sponsortimes.length, models.Usernames.userName)\
+        .where(models.Sponsortimes.UUID == UUID)\
+        .outerjoin(models.Usernames, models.Sponsortimes.userID == models.Usernames.userID)
     result = await db.execute(stmt)
     segment = result.scalar_one_or_none()
     if segment:

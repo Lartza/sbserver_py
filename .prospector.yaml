@@ -32,3 +32,4 @@ pycodestyle:
     max-line-length: 120
   disable:
     - N805
+    - N815

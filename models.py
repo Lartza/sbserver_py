@@ -1,3 +1,4 @@
+# pylint:disable=too-few-public-methods
 from sqlalchemy import Column, Text, REAL, Integer, BigInteger
 from sqlalchemy.orm import column_property
 
